@@ -1,9 +1,10 @@
 apply plugin: 'checkstyle'
-apply plugin: 'findbugs'
 apply plugin: 'pmd'
+apply plugin: "com.github.spotbugs"
 
-// Add checkstyle, findbugs, pmd and lint to the check task.
-check.dependsOn 'checkstyle', 'findbugs', 'pmd', 'lint'
+dependencies {
+    spotbugsPlugins 'com.mebigfatguy.fb-contrib:fb-contrib:7.0.5.sb'
+}
 
 task checkstyle(type: Checkstyle) {
     configFile file("${project.rootDir}/config/quality/checkstyle/checkstyle.xml")
@@ -14,29 +15,48 @@ task checkstyle(type: Checkstyle) {
     classpath = files()
 }
 
-task findbugs(type: FindBugs) {
-    ignoreFailures = false
-    effort = "max"
-    reportLevel = "high"
-    excludeFilter = new File("${project.rootDir}/config/quality/findbugs/findbugs-filter.xml")
-    classes = files("${project.rootDir}/app/build/intermediates/classes")
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+    }
+}
 
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
+spotbugs {
+    toolVersion = '3.1.1'
+}
+
+tasks.withType(rootProject.ext.spotbugsClass) {
+    //change this to compileFlavourSource
+    dependsOn 'compileDebugSources'
+
+    ignoreFailures = false
+
+    classes = files("$project.rootDir/app/build/intermediates/classes/dev/debug")
+    //the higher the effort the slower it runs
+    //min/default/max
+    effort = "max"
+    //low/medium/high
+    reportLevel = "high"
+
+    //change these to the exclude and include filters
+    excludeFilter = new File("$qualityConfigDir/findbugs/findbugs-exclude.xml")
+    includeFilter = new File("$qualityConfigDir/findbugs/findbugs-include.xml")
 
     reports {
+        //only one can be enabled
+        //no report writes to the console
+        //does not impact speed
         xml.enabled = false
         html.enabled = true
         xml {
-            destination "$project.buildDir/reports/findbugs/findbugs.xml"
+            destination "$reportsDir/spotbugs/spotbugs.xml"
         }
         html {
-            destination "$project.buildDir/reports/findbugs/findbugs.html"
+            destination "$reportsDir/spotbugs/spotbugs.html"
         }
     }
-
-    classpath = files()
 }
 
 task pmd(type: Pmd) {
