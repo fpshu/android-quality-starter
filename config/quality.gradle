@@ -36,9 +36,7 @@ sourceSets {
      toolVersion = '3.1.1'
  }
 
-//rootProject.ext.spotbugsClass need to be declared in the root build.gradle
-//rootProject.ext.spotbugsClass = com.github.spotbugs.SpotBugsTask
-tasks.withType(rootProject.ext.spotbugsClass) {
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
     //change this to compileFlavourDebugOrReleaseSources
     dependsOn 'compileDebugSources'
 
